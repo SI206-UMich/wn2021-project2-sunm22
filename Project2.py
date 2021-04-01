@@ -56,10 +56,11 @@ def get_search_links():
 
     for row in rows:
         book = row.find('a', class_ = 'bookTitle')
-        while len(url_list) < 10:
-            half_url = book.get('href', None)
-            full_url = 'https://www.goodreads.com' + half_url
-            url_list.append(full_url)
+        half_url = book.get('href', None)
+        full_url = 'https://www.goodreads.com' + half_url
+        url_list.append(full_url)
+        if len(url_list) > 9:
+            break
 
     return url_list
 
@@ -86,9 +87,10 @@ def get_book_summary(book_url):
     author = div.find('span', itemprop = 'name').text.strip()
     print(author)
     pages = div.find('span', itemprop = 'numberOfPages').text.strip()
-    print(pages)
+    page_count = int(pages.split()[0])
+    print(page_count)
 
-    tup = (title, author, pages)
+    tup = (title, author, page_count)
 
     return tup
 
@@ -176,17 +178,17 @@ class TestCases(unittest.TestCase):
         for url in TestCases.search_urls:
             self.assertTrue(url.startswith('https://www.goodreads.com/book/show'))
 
-
-
     def test_get_book_summary(self):
         # create a local variable – summaries – a list containing the results from get_book_summary()
         summaries = []
+        pages = []
         for url in TestCases.search_urls:
             summaries.append(get_book_summary(url))
         # check that the number of book summaries is correct (10)
         self.assertEqual(len(summaries), 10)
         # for each URL in TestCases.search_urls (should be a list of tuples)
-        for item in TestCases.search_urls:
+        # IS THIS RIGHT?
+        for item in summaries:
             # check that each item in the list is a tuple
             self.assertTrue(isinstance(item, tuple))
             # check that each tuple has 3 elements
@@ -195,9 +197,10 @@ class TestCases(unittest.TestCase):
             self.assertTrue(isinstance(item[0], str))
             self.assertTrue(isinstance(item[1], str))
             # check that the third element in the tuple, i.e. pages is an int
-            self.assertTrue(isinstance(item[2], str))
-            # check that the first book in the search has 337 pages
-            self.assertEqual(TestCases.search_urls[0][2], 337)
+            self.assertTrue(isinstance(item[2], int))
+            pages.append(item[2])
+        # check that the first book in the search has 337 pages
+        self.assertEqual(pages[0], 337)
 
 
     def test_summarize_best_books(self):
